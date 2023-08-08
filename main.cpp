@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 enum Direction
 {
@@ -13,93 +14,59 @@ enum Direction
 class SnakePart : public sf::Drawable
 {
 public:
-    SnakePart(unsigned int size, unsigned int posX, unsigned int posY, sf::Color color, Direction direction = RIGHT)
-        : size(size), posX(posX), posY(posY), color(color), direction(direction){};
-
-    void move(unsigned int speed)
+    SnakePart(unsigned int size, unsigned int posX, unsigned int posY, sf::Color color)
+        : size(size), posX(posX), posY(posY), color(color)
     {
-        switch (direction)
-        {
-        case UP:
-            posY -= speed;
-            break;
-        case DOWN:
-            posY += speed;
-            break;
-        case LEFT:
-            posX -= speed;
-            break;
-        case RIGHT:
-            posX += speed;
-            break;
-        }
-    }
+        rectangle = sf::RectangleShape(sf::Vector2f(size, size));
+        rectangle.setFillColor(color);
+        rectangle.setPosition(sf::Vector2f(posX * size, posY * size));
+    };
 
     unsigned int posX;
     unsigned int posY;
 
-    void draw(sf::RenderTarget &target, sf::RenderStates states) const
-    {
-        sf::RectangleShape snakePart = sf::RectangleShape(sf::Vector2f(size, size));
-        snakePart.setFillColor(color);
-        snakePart.setPosition(sf::Vector2f(posX, posY));
-        target.draw(snakePart, states);
-    };
-
 private:
     unsigned int size;
 
+    sf::RectangleShape rectangle;
     sf::Color color;
-    Direction direction;
+
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const
+    {
+        target.draw(rectangle, states);
+    };
 };
 
 class Snake : public sf::Drawable
 {
 public:
-    Snake(unsigned int areaWidth, unsigned int areaHeight, unsigned int partSize, sf::Color color, Direction direction = RIGHT)
-        : areaWidth(areaWidth), areaHeight(areaHeight), partSize(partSize), color(color), direction(direction), lastDirection(direction)
+    Snake(unsigned int width, unsigned int height, unsigned int partSize, sf::Color color, Direction direction = RIGHT, int speed = 5)
+        : sizeX(width / partSize), sizeY(height / partSize), partSize(partSize), color(color), direction(direction), lastDirection(direction), speed(speed)
     {
-        parts.push_back(SnakePart(25, 25, 0, sf::Color(255, 255, 0)));
-        parts.push_back(SnakePart(25, 25, 0, sf::Color(255, 0, 255)));
+        parts.push_back(SnakePart(25, 2, 0, sf::Color(255, 255, 0)));
+        parts.push_back(SnakePart(25, 1, 0, sf::Color(255, 0, 255)));
         parts.push_back(SnakePart(25, 0, 0, sf::Color(0, 255, 255)));
         frameCounter = 0;
     };
+
     void move()
     {
-        if (frameCounter == 20)
+        if (frameCounter == 10 - speed)
         {
             frameCounter = 0;
-            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY, partSize, color, direction));
+            lastDirection = direction;
+            grow();
             parts.pop_back();
-        }
-        else if (frameCounter % 3 == 0)
-        {
-            frameCounter++;
-            parts[0].move(3);
-            parts[parts.size() - 1].move(3);
         }
         else
         {
             frameCounter++;
         }
     }
+
     void grow()
     {
-        switch (direction)
-        {
-        case UP:
-            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY - partSize, partSize, color, direction));
-            break;
-        case DOWN:
-            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY + partSize, partSize, color, direction));
-            break;
-        case LEFT:
-            parts.insert(parts.begin(), SnakePart(parts[0].posX - partSize, parts[0].posY, partSize, color, direction));
-            break;
-        case RIGHT:
-            parts.insert(parts.begin(), SnakePart(parts[0].posX + partSize, parts[0].posY, partSize, color, direction));
-            break;
-        }
+        parts.insert(parts.begin(), SnakePart(partSize, calculatePosX(), calculatePosY(), color));
     }
     void changeDirection(Direction direction)
     {
@@ -110,28 +77,98 @@ public:
         this->direction = direction;
     }
 
-    unsigned int length() { return parts.size(); };
-    Direction getDirection() { return direction; };
-    unsigned int frameCounter;
+    void speedUp()
+    {
+        changeSpeed(speed + 1);
+    }
+
+    void speedDown()
+    {
+        changeSpeed(speed - 1);
+    }
+
+    void changeSpeed(int speed)
+    {
+        frameCounter = 0;
+        this->speed = std::max(0, std::min(10, speed));
+    }
 
 private:
     void draw(sf::RenderTarget &target, sf::RenderStates states) const
     {
-
         for (int i = 0; i < parts.size(); i++)
         {
-            parts[i].draw(target, states);
+            target.draw(parts[i], states);
         }
     };
 
+    unsigned int calculatePosX()
+    {
+        switch (direction)
+        {
+        case LEFT:
+            if (parts[0].posX == 0)
+            {
+                return sizeX - 1;
+            }
+            else
+            {
+                return parts[0].posX - 1;
+            }
+            break;
+        case RIGHT:
+            if (parts[0].posX == sizeX - 1)
+            {
+                return 0;
+            }
+            else
+            {
+                return parts[0].posX + 1;
+            }
+            break;
+        default:
+            return parts[0].posX;
+        }
+    }
+
+    unsigned int calculatePosY()
+    {
+        switch (direction)
+        {
+        case UP:
+            if (parts[0].posY == 0)
+            {
+                return sizeY - 1;
+            }
+            else
+            {
+                return parts[0].posY - 1;
+            }
+            break;
+        case DOWN:
+            if (parts[0].posY == sizeY - 1)
+            {
+                return 0;
+            }
+            else
+            {
+                return parts[0].posY + 1;
+            }
+            break;
+        default:
+            return parts[0].posY;
+        }
+    }
+
     unsigned int partSize;
-    unsigned int areaWidth;
-    unsigned int areaHeight;
-    unsigned int speed = 7;
+    unsigned int sizeX;
+    unsigned int sizeY;
+    int speed;
+    unsigned int frameCounter;
 
     std::vector<SnakePart> parts;
-    Direction direction = RIGHT;
-    Direction lastDirection = RIGHT;
+    Direction direction;
+    Direction lastDirection;
     sf::Color color;
 };
 
@@ -162,8 +199,6 @@ int main()
     sf::Clock clock;
     float lastTime = 0;
 
-    SnakePart part = SnakePart(25, 50, 200, sf::Color(0, 0, 255));
-
     while (window.isOpen())
     {
         float currentTime = clock.restart().asSeconds();
@@ -179,27 +214,25 @@ int main()
                 switch (event.key.code)
                 {
                 case sf::Keyboard::Up:
-
                     snake.changeDirection(UP);
-
                     break;
                 case sf::Keyboard::Down:
-
                     snake.changeDirection(DOWN);
-
                     break;
                 case sf::Keyboard::Left:
-
                     snake.changeDirection(LEFT);
-
                     break;
                 case sf::Keyboard::Right:
-
                     snake.changeDirection(RIGHT);
-
                     break;
                 case sf::Keyboard::A:
+                    snake.speedDown();
+                    break;
+                case sf::Keyboard::S:
                     snake.grow();
+                    break;
+                case sf::Keyboard::D:
+                    snake.speedUp();
                     break;
                 }
 
@@ -211,11 +244,9 @@ int main()
         }
 
         snake.move();
-        part.move(3);
         window.clear();
         window.draw(background);
 
-        window.draw(part);
         window.draw(snake);
         window.draw(fpsCounter);
 
