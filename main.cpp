@@ -10,64 +10,128 @@ enum Direction
     RIGHT
 };
 
+class SnakePart : public sf::Drawable
+{
+public:
+    SnakePart(unsigned int size, unsigned int posX, unsigned int posY, sf::Color color, Direction direction = RIGHT)
+        : size(size), posX(posX), posY(posY), color(color), direction(direction){};
+
+    void move(unsigned int speed)
+    {
+        switch (direction)
+        {
+        case UP:
+            posY -= speed;
+            break;
+        case DOWN:
+            posY += speed;
+            break;
+        case LEFT:
+            posX -= speed;
+            break;
+        case RIGHT:
+            posX += speed;
+            break;
+        }
+    }
+
+    unsigned int posX;
+    unsigned int posY;
+
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const
+    {
+        sf::RectangleShape snakePart = sf::RectangleShape(sf::Vector2f(size, size));
+        snakePart.setFillColor(color);
+        snakePart.setPosition(sf::Vector2f(posX, posY));
+        target.draw(snakePart, states);
+    };
+
+private:
+    unsigned int size;
+
+    sf::Color color;
+    Direction direction;
+};
+
 class Snake : public sf::Drawable
 {
 public:
-    Snake(unsigned int areaWidth, unsigned int areaHeight, unsigned int partSize, sf::Color color)
-        : areaWidth(areaWidth), areaHeight(areaHeight), partSize(partSize), color(color)
+    Snake(unsigned int areaWidth, unsigned int areaHeight, unsigned int partSize, sf::Color color, Direction direction = RIGHT)
+        : areaWidth(areaWidth), areaHeight(areaHeight), partSize(partSize), color(color), direction(direction), lastDirection(direction)
     {
-        positions.push_back(2);
-        positions.push_back(1);
-        positions.push_back(0);
+        parts.push_back(SnakePart(25, 25, 0, sf::Color(255, 255, 0)));
+        parts.push_back(SnakePart(25, 25, 0, sf::Color(255, 0, 255)));
+        parts.push_back(SnakePart(25, 0, 0, sf::Color(0, 255, 255)));
+        frameCounter = 0;
     };
-    //~Snake();
     void move()
     {
-        grow();
-        positions.pop_back();
+        if (frameCounter == 20)
+        {
+            frameCounter = 0;
+            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY, partSize, color, direction));
+            parts.pop_back();
+        }
+        else if (frameCounter % 3 == 0)
+        {
+            frameCounter++;
+            parts[0].move(3);
+            parts[parts.size() - 1].move(3);
+        }
+        else
+        {
+            frameCounter++;
+        }
     }
     void grow()
     {
         switch (direction)
         {
         case UP:
-            positions.insert(positions.begin(), positions[0] - (areaWidth / partSize));
+            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY - partSize, partSize, color, direction));
             break;
         case DOWN:
-            positions.insert(positions.begin(), positions[0] + (areaWidth / partSize));
+            parts.insert(parts.begin(), SnakePart(parts[0].posX, parts[0].posY + partSize, partSize, color, direction));
             break;
         case LEFT:
-            positions.insert(positions.begin(), positions[0] - 1);
+            parts.insert(parts.begin(), SnakePart(parts[0].posX - partSize, parts[0].posY, partSize, color, direction));
             break;
         case RIGHT:
-            positions.insert(positions.begin(), positions[0] + 1);
+            parts.insert(parts.begin(), SnakePart(parts[0].posX + partSize, parts[0].posY, partSize, color, direction));
             break;
         }
     }
     void changeDirection(Direction direction)
     {
+        if (lastDirection == UP && direction == DOWN || lastDirection == DOWN && direction == UP || lastDirection == LEFT && direction == RIGHT || lastDirection == RIGHT && direction == LEFT)
+        {
+            return;
+        }
         this->direction = direction;
     }
 
-    unsigned int length() { return positions.size(); };
+    unsigned int length() { return parts.size(); };
     Direction getDirection() { return direction; };
+    unsigned int frameCounter;
 
 private:
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const
     {
-        for (int i = 0; i < positions.size(); i++)
+
+        for (int i = 0; i < parts.size(); i++)
         {
-            sf::RectangleShape snakePart = sf::RectangleShape(sf::Vector2f(partSize, partSize));
-            snakePart.setFillColor(color);
-            snakePart.setPosition(sf::Vector2f(positions[i] % (areaWidth / partSize) * partSize, positions[i] / (areaHeight / partSize) * partSize));
-            target.draw(snakePart, states);
+            parts[i].draw(target, states);
         }
     };
+
     unsigned int partSize;
     unsigned int areaWidth;
     unsigned int areaHeight;
-    std::vector<int> positions;
+    unsigned int speed = 7;
+
+    std::vector<SnakePart> parts;
     Direction direction = RIGHT;
+    Direction lastDirection = RIGHT;
     sf::Color color;
 };
 
@@ -76,6 +140,7 @@ int main()
     sf::RenderWindow window(sf::VideoMode(500, 550), "Snake CPP");
     // window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60);
+
     sf::Font font;
     if (font.loadFromFile("resources/fonts/arial.ttf"))
     {
@@ -89,16 +154,16 @@ int main()
     fpsCounter.setPosition(sf::Vector2f(220, 510));
 
     sf::RectangleShape background = sf::RectangleShape(sf::Vector2f(500, 500));
-    background.setFillColor(sf::Color(100, 0, 0));
+    background.setFillColor(sf::Color(10, 0, 0));
     background.setPosition(sf::Vector2f(0, 0));
-
-    Direction lastSnakeDirection = RIGHT;
 
     Snake snake = Snake(500, 500, 25, sf::Color(255, 255, 255));
 
     sf::Clock clock;
     float lastTime = 0;
-    unsigned int frameCounter = 0;
+
+    SnakePart part = SnakePart(25, 50, 200, sf::Color(0, 0, 255));
+
     while (window.isOpen())
     {
         float currentTime = clock.restart().asSeconds();
@@ -114,28 +179,24 @@ int main()
                 switch (event.key.code)
                 {
                 case sf::Keyboard::Up:
-                    if (lastSnakeDirection != DOWN)
-                    {
-                        snake.changeDirection(UP);
-                    }
+
+                    snake.changeDirection(UP);
+
                     break;
                 case sf::Keyboard::Down:
-                    if (lastSnakeDirection != UP)
-                    {
-                        snake.changeDirection(DOWN);
-                    }
+
+                    snake.changeDirection(DOWN);
+
                     break;
                 case sf::Keyboard::Left:
-                    if (lastSnakeDirection != RIGHT)
-                    {
-                        snake.changeDirection(LEFT);
-                    }
+
+                    snake.changeDirection(LEFT);
+
                     break;
                 case sf::Keyboard::Right:
-                    if (lastSnakeDirection != LEFT)
-                    {
-                        snake.changeDirection(RIGHT);
-                    }
+
+                    snake.changeDirection(RIGHT);
+
                     break;
                 case sf::Keyboard::A:
                     snake.grow();
@@ -149,22 +210,15 @@ int main()
             }
         }
 
-        if (frameCounter > 3)
-        {
-            lastSnakeDirection = snake.getDirection();
-            frameCounter = 0;
-            snake.move();
-        }
-        else
-        {
-            frameCounter++;
-        }
-
+        snake.move();
+        part.move(3);
         window.clear();
-
         window.draw(background);
+
+        window.draw(part);
         window.draw(snake);
         window.draw(fpsCounter);
+
         window.display();
     }
 
