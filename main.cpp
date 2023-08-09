@@ -47,6 +47,7 @@ public:
         parts.push_back(SnakePart(25, 1, 0, sf::Color(255, 0, 255)));
         parts.push_back(SnakePart(25, 0, 0, sf::Color(0, 255, 255)));
         frameCounter = 0;
+        isAlive = true;
     };
 
     void move()
@@ -57,6 +58,7 @@ public:
             lastDirection = direction;
             grow();
             parts.pop_back();
+            checkIfAlive();
         }
         else
         {
@@ -92,6 +94,13 @@ public:
         frameCounter = 0;
         this->speed = std::max(0, std::min(10, speed));
     }
+
+    sf::Vector2u getHeadPosition()
+    {
+        return sf::Vector2u(parts[0].posX, parts[0].posY);
+    }
+
+    bool isAlive;
 
 private:
     void draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -158,6 +167,19 @@ private:
         default:
             return parts[0].posY;
         }
+    }
+
+    void checkIfAlive()
+    {
+        for (int i = 1; i < parts.size(); i++)
+        {
+            if (parts[0].posX == parts[i].posX && parts[0].posY == parts[i].posY)
+            {
+                isAlive = false;
+                return;
+            }
+        }
+        isAlive = true;
     }
 
     unsigned int partSize;
@@ -243,7 +265,10 @@ int main()
             }
         }
 
-        snake.move();
+        if (snake.isAlive)
+        {
+            snake.move();
+        }
         window.clear();
         window.draw(background);
 
