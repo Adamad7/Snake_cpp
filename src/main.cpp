@@ -21,7 +21,7 @@ int main()
     }
     sf::Text fpsCounter("FPS: 0", font, 20);
     fpsCounter.setPosition(sf::Vector2f(220, 510));
-
+    std::cout << "Testing std output" << std::endl;
     sf::RectangleShape background = sf::RectangleShape(sf::Vector2f(500, 500));
     background.setFillColor(sf::Color(10, 0, 0));
     background.setPosition(sf::Vector2f(0, 0));

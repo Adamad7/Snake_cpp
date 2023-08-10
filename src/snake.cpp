@@ -3,9 +3,9 @@
 Snake::Snake(unsigned int width, unsigned int height, unsigned int partSize, sf::Color color, Direction direction, int speed)
     : sizeX(width / partSize), sizeY(height / partSize), partSize(partSize), color(color), direction(direction), lastDirection(direction), speed(speed)
 {
-    parts.push_back(SnakePart(25, 2, 0, sf::Color(255, 255, 0)));
-    parts.push_back(SnakePart(25, 1, 0, sf::Color(255, 0, 255)));
-    parts.push_back(SnakePart(25, 0, 0, sf::Color(0, 255, 255)));
+    parts.push_back(SnakePart(partSize, 2, 0, sf::Color(255, 255, 0)));
+    parts.push_back(SnakePart(partSize, 1, 0, sf::Color(255, 0, 255)));
+    parts.push_back(SnakePart(partSize, 0, 0, sf::Color(0, 255, 255)));
     frameCounter = 0;
     isAlive = true;
 };

@@ -1,73 +1,64 @@
-# all: compile link
-
-# compile:
-# 	g++ -c main.cpp -I"C:\Programowanie\SFML-2.6.0_64\include" -DSFML_STATIC
-
-# link:
-# 	g++ main.o -o main -L"C:\Programowanie\SFML-2.6.0_64\lib" -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -mwindows -lsfml-main
-
-# clean:
-# 	rm -f main *.o
-
 # Compiler
 CXX := g++       
 # Compiler flags
-CXXFLAGS :=   -I"..\SFML-2.6.0_64\include" -DSFML_STATIC -Iinclude 
+CXXFLAGS := -std=c++11  -I"..\SFML-2.6.0_64\include" -DSFML_STATIC -Iinclude -Icatch2
 # Linker flags
-LDFLAGS :=    -L"..\SFML-2.6.0_64\lib" -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -mwindows -lsfml-main     
-# SFML_INCLUDE := -I".\SFML-2.6.0_64\include"
-# SFML_LIB := -L".\SFML-2.6.0_64\lib"
+LDFLAGS :=    -L"..\SFML-2.6.0_64\lib" -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lopengl32 -lfreetype -lwinmm -lgdi32 -lsfml-main     
 SRCDIR := src
 BUILDDIR := build
 
-# tworzy listę źródeł z wszystkich plików w katalogu src o rozszerzeniu .cpp
 SOURCES := $(wildcard $(SRCDIR)/*.cpp) 
-# tworzy listę obiektów z wszystkich plików w katalogu build o rozszerzeniu .o
 OBJECTS := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES)) 
 TARGET := $(BUILDDIR)/snake
 
-.PHONY: all clean
+.PHONY: all clean test1 test2
+
+test1: 
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/main.o src/main.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/snake.o src/snake.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/snakePart.o src/snakePart.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) build/main.o build/snake.o build/snakePart.o $(LDFLAGS) -o build/snake
+
+test2:
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/test_snake.o tests/test_snake.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/snake.o src/snake.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) -c -o build/snakePart.o src/snakePart.cpp
+	g++ -std=c++11  -I"..\SFML-2.6.0_64\include" $(CXXFLAGS) build/test_snake.o build/snake.o build/snakePart.o $(LDFLAGS) -o build/test_snake
+	.\build\test_snake.exe
 
 all: $(TARGET)
+	.\$(TARGET).exe
 
 $(TARGET): $(OBJECTS)
-#	@mkdir -p $(BUILDDIR)
-#	@echo $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
-#	$(CXX) $(SFML_INCLUDE) $(SFML_LIB) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@ 
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
-#	@mkdir -p $(BUILDDIR)
-#	@echo $(CXX) $(CXXFLAGS) -c -o $@ $<
-#	$(CXX) $(SFML_INCLUDE) $(SFML_LIB) $(CXXFLAGS) -c -o $@ $<
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
-
-
-
 clean:
-	rm build/*.o
+	rm -f build/*.o
 
 TESTSRCDIR := tests
 TESTOBJDIR := $(BUILDDIR)/tests
 TESTBUILDDIR := $(BUILDDIR)
 
 TESTSOURCES := $(wildcard $(TESTSRCDIR)/*.cpp)
-TESTOBJECTS := $(patsubst $(TESTSRCDIR)/%.cpp,$(TESTOBJDIR)/%.o,$(TESTSOURCES))
-TESTTARGET := $(TESTBUILDDIR)/testrunner
 
-CXXFLAGS += -I$(TESTSRCDIR)   # Add Catch2 include path here (It's already in the repo)
+TESTOBJECTS :=  $(patsubst $(TESTSRCDIR)/%.cpp,$(TESTOBJDIR)/%.o,$(TESTSOURCES))
+
+TESTTARGET := $(TESTBUILDDIR)/testrunner
 
 .PHONY: test
 
 test: $(TESTTARGET)
-	$(TESTTARGET)
+	./$(TESTTARGET).exe
 
-$(TESTTARGET): $(TESTOBJECTS) $(OBJECTS)
-	@mkdir -p $(TESTBUILDDIR)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+$(TESTTARGET): $(TESTOBJECTS) $(filter-out $(TESTBUILDDIR)/main.o, $(OBJECTS))
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@ 
 
 $(TESTOBJDIR)/%.o: $(TESTSRCDIR)/%.cpp
-	@mkdir -p $(TESTOBJDIR)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+catch.o: catch.hpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
