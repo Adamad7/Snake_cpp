@@ -4,10 +4,15 @@
 #include <algorithm>
 #include "../include/snake.hpp"
 #include "../include/scoreboard.hpp"
+#include "../include/food.hpp"
+
+#define PART_SIZE 10
+#define WIDTH 500
+#define HEIGHT 500
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(500, 550), "Snake CPP");
+    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT + 50), "Snake CPP");
     // window.setVerticalSyncEnabled(true);
     window.setFramerateLimit(60);
 
@@ -23,13 +28,15 @@ int main()
     sf::Text fpsCounter("FPS: 0", font, 20);
     fpsCounter.setPosition(sf::Vector2f(220, 510));
     std::cout << "Testing std output" << std::endl;
-    sf::RectangleShape background = sf::RectangleShape(sf::Vector2f(500, 500));
+    sf::RectangleShape background = sf::RectangleShape(sf::Vector2f(WIDTH, HEIGHT));
     background.setFillColor(sf::Color(10, 0, 0));
     background.setPosition(sf::Vector2f(0, 0));
 
-    Snake snake = Snake(500, 500, 25, sf::Color(255, 255, 255));
+    Snake snake = Snake(WIDTH, HEIGHT, PART_SIZE, sf::Color(255, 255, 255));
 
-    Scoreboard scoreboard(sf::Vector2f(500, 50), sf::Vector2f(0, 500), sf::Color(10, 10, 100), sf::Color(255, 255, 255), font, 20, 10);
+    Scoreboard scoreboard(sf::Vector2f(WIDTH, 50), sf::Vector2f(0, HEIGHT), sf::Color(10, 10, 100), sf::Color(255, 255, 255), font, 20, 0);
+    Food food = Food(WIDTH, HEIGHT, PART_SIZE, sf::Color(255, 0, 0), 10);
+    food.spawnNewFood(snake.getSnakePositions());
 
     sf::Clock clock;
     float lastTime = 0;
@@ -81,13 +88,25 @@ int main()
         if (snake.isAlive)
         {
             snake.move();
+            scoreboard.updateTime();
         }
+
+        if (snake.getHeadPosition().x == food.getFoodPosition().x && snake.getHeadPosition().y == food.getFoodPosition().y)
+        {
+            snake.grow();
+            food.spawnNewFood(snake.getSnakePositions());
+            scoreboard.increaseScore();
+        }
+
+        // std::cout << "Snake pos X: " << snake.getHeadPosition().x << " Snake pos Y: " << snake.getHeadPosition().y << std::endl;
+        // std::cout << "Food pos X: " << food.getFoodPosition().x << " Food pos Y: " << food.getFoodPosition().y << std::endl;
+
         window.clear();
         window.draw(background);
 
         window.draw(snake);
+        window.draw(food);
         // window.draw(fpsCounter);
-        scoreboard.updateTime();
         window.draw(scoreboard);
 
         window.display();

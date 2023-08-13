@@ -26,6 +26,7 @@ public:
     void changeSpeed(int speed);
 
     sf::Vector2u getHeadPosition();
+    std::vector<sf::Vector2u> getSnakePositions();
 
     bool isAlive;
 

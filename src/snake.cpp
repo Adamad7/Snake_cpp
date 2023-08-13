@@ -138,3 +138,13 @@ void Snake::checkIfAlive()
     }
     isAlive = true;
 }
+
+std::vector<sf::Vector2u> Snake::getSnakePositions()
+{
+    std::vector<sf::Vector2u> snakePositions;
+    for (auto &part : parts)
+    {
+        snakePositions.push_back(sf::Vector2u(part.posX, part.posY));
+    }
+    return snakePositions;
+}
