@@ -2,7 +2,8 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
-#include "../include/snake.h"
+#include "../include/snake.hpp"
+#include "../include/scoreboard.hpp"
 
 int main()
 {
@@ -27,6 +28,8 @@ int main()
     background.setPosition(sf::Vector2f(0, 0));
 
     Snake snake = Snake(500, 500, 25, sf::Color(255, 255, 255));
+
+    Scoreboard scoreboard(sf::Vector2f(500, 50), sf::Vector2f(0, 500), sf::Color(10, 10, 100), sf::Color(255, 255, 255), font, 20, 10);
 
     sf::Clock clock;
     float lastTime = 0;
@@ -83,7 +86,9 @@ int main()
         window.draw(background);
 
         window.draw(snake);
-        window.draw(fpsCounter);
+        // window.draw(fpsCounter);
+        scoreboard.updateTime();
+        window.draw(scoreboard);
 
         window.display();
     }

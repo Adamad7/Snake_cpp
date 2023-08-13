@@ -1,4 +1,4 @@
-#include "../include/snakePart.h"
+#include "../include/snakePart.hpp"
 
 SnakePart::SnakePart(unsigned int size, unsigned int posX, unsigned int posY, sf::Color color)
     : size(size), posX(posX), posY(posY), color(color)

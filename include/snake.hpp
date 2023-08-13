@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include "snakePart.h"
+#include "snakePart.hpp"
 
 enum Direction
 {

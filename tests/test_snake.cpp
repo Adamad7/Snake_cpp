@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 
 #include "C:\Programowanie\Snake_cpp\catch2\catch.hpp"
-#include "./../include/snake.h"
+#include "./../include/snake.hpp"
 #include <iostream>
 
 TEST_CASE("Snake is created correctly", "[snake]")

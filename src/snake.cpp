@@ -1,4 +1,4 @@
-#include "../include/snake.h"
+#include "../include/snake.hpp"
 
 Snake::Snake(unsigned int width, unsigned int height, unsigned int partSize, sf::Color color, Direction direction, int speed)
     : sizeX(width / partSize), sizeY(height / partSize), partSize(partSize), color(color), direction(direction), lastDirection(direction), speed(speed)
