@@ -5,7 +5,7 @@ class Food : public sf::Drawable
 public:
     Food(unsigned int width, unsigned int height, unsigned int size, sf::Color color, int bonus);
     void spawnNewFood(std::vector<sf::Vector2u> snakePositions);
-    sf::Vector2u getFoodPosition();
+    sf::Vector2u getPosition();
 
 private:
     void draw(sf::RenderTarget &target, sf::RenderStates states) const;

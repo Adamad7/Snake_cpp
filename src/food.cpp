@@ -37,7 +37,7 @@ void Food::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(rectangle);
 }
 
-sf::Vector2u Food::getFoodPosition()
+sf::Vector2u Food::getPosition()
 {
     return this->foodPosition;
 }
