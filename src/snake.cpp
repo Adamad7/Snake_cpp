@@ -18,8 +18,7 @@ void Snake::move()
         lastDirection = direction;
         grow();
         parts.pop_back();
-        checkIfAlive();
-    }
+        }
     else
     {
         frameCounter++;
@@ -29,6 +28,7 @@ void Snake::move()
 void Snake::grow()
 {
     parts.insert(parts.begin(), SnakePart(partSize, calculatePosX(), calculatePosY(), color));
+    checkIfAlive();
 }
 void Snake::changeDirection(Direction direction)
 {
